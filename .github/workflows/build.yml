@@ -20,27 +20,13 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - name: Restore Gradle Wrapper JAR
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          VERSION=$(sed -n 's/^distributionUrl=.*gradle-\([0-9][0-9.]*\)-\(bin\|all\)\.zip.*/\1/p' gradle/wrapper/gradle-wrapper.properties | head -n 1)
-
-          if [ -z "$VERSION" ]; then
-            echo "Could not detect Gradle version"
-            exit 1
-          fi
-
-          URL="https://services.gradle.org/distributions/gradle-${VERSION}-wrapper.jar"
-
-          curl -fsSL "$URL" -o gradle/wrapper/gradle-wrapper.jar
-          curl -fsSL "${URL}.sha256" -o /tmp/wrapper.sha256
-
-          echo "$(cat /tmp/wrapper.sha256)  gradle/wrapper/gradle-wrapper.jar" | sha256sum -c -
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 'current'
 
       - name: Build Fabric mod
-        run: chmod +x gradlew && ./gradlew build --no-daemon
+        run: gradle build --no-daemon
 
       - name: Upload JAR files
         uses: actions/upload-artifact@v4
